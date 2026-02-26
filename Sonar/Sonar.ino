@@ -1,7 +1,8 @@
 /*
 Developers: CorDae Clark, Matthew Smith
 
-Resoures: Chat gpt
+Resoures: Chat gpt  
+Arduino Project Documentation: https://projecthub.arduino.cc/diegogalvan_1294/building-an-ultrasonic-radar-using-arduino-and-processing-59053e
 
 */
 
