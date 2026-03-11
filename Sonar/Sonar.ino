@@ -16,7 +16,7 @@ const int ECHO_PIN = 9;
 const int BUZZER_PIN = 6;   // Piezo speaker
 
 // --- LED Pins ---
-const int LED1 = 2;  
+const int LED1 = 2;
 const int LED2 = 3;
 const int LED3 = 4;
 const int LED4 = 5;
@@ -25,7 +25,7 @@ const int LED4 = 5;
 const int MIN_ANGLE = 0;
 const int MAX_ANGLE = 180;
 const int ANGLE_STEP = 1;
-const int SWEEP_DELAY = 15;
+const int SWEEP_DELAY = 20;
 
 // --- Ultrasonic Constant ---
 const float SOUND_SPEED_FACTOR = 58.2;
@@ -80,7 +80,12 @@ int calculateDistance() {
   delayMicroseconds(10);
   digitalWrite(TRIG_PIN, LOW);
 
-  long duration = pulseIn(ECHO_PIN, HIGH);
+  long duration = pulseIn(ECHO_PIN, HIGH, 30000); // timeout after 30ms
+
+  // If no echo received, treat as nothing detected
+  if (duration == 0) {
+    return 200;
+  }
 
   int distance = duration / SOUND_SPEED_FACTOR;
 
@@ -138,7 +143,7 @@ void updateBuzzer(int distance) {
     noTone(BUZZER_PIN);
   }
   else {
-    tone(BUZZER_PIN, 1200); // constant beep when very close
+    tone(BUZZER_PIN, 1200); // constant tone when very close
   }
 }
 
