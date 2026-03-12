@@ -1,4 +1,3 @@
-
 /*
 Developers: CorDae Clark, Matthew Smith
 
@@ -7,7 +6,6 @@ Arduino Project Documentation:
 https://projecthub.arduino.cc/diegogalvan_1294/building-an-ultrasonic-radar-using-arduino-and-processing-59053e
 */
 
-#include <Servo.h>
 #include <Servo.h>
 
 // --- Pin Definitions ---
@@ -25,8 +23,8 @@ const int LED4 = 5;
 // --- Servo Radar Settings ---
 const int MIN_ANGLE = 0;
 const int MAX_ANGLE = 180;
-const int ANGLE_STEP = 2;
-const int SWEEP_DELAY = 8;
+const int ANGLE_STEP = 1;   // smoother movement
+const int SWEEP_DELAY = 18; // slower sweep
 
 // --- Ultrasonic Constant ---
 const float SOUND_SPEED_FACTOR = 58.2;
@@ -60,19 +58,19 @@ void loop() {
   // Move Servo
   radarServo.write(angle);
 
-  // Get Distance
+  // Measure distance
   int distance = calculateDistance();
 
-  // Control LEDs
+  // LED control
   controlLEDs(distance);
 
-  // Control Buzzer
+  // Buzzer control
   controlBuzzer(distance);
 
-  // Send Data to Radar Display
+  // Send radar data
   printData(angle, distance);
 
-  // Sweep Servo
+  // Sweep movement
   angle += direction * ANGLE_STEP;
 
   if (angle >= MAX_ANGLE || angle <= MIN_ANGLE) {
@@ -128,7 +126,7 @@ void controlBuzzer(int distance) {
 
 }
 
-// --- Send Data to Processing Radar ---
+// --- Send Data to Processing ---
 void printData(int angle, int distance) {
 
   Serial.print(angle);
