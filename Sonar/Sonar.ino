@@ -5,7 +5,6 @@ Resources: ChatGPT, Arduino Studio, Processing IDE
 Arduino Project Documentation:
 https://projecthub.arduino.cc/diegogalvan_1294/building-an-ultrasonic-radar-using-arduino-and-processing-59053e
 */
-
 #include <Servo.h>
 
 // --- Pin Definitions ---
@@ -23,16 +22,14 @@ const int LED4 = 5;
 // --- Servo Radar Settings ---
 const int MIN_ANGLE = 0;
 const int MAX_ANGLE = 180;
-const int ANGLE_STEP = 1;   // smoother movement
-const int SWEEP_DELAY = 18; // slower sweep
+const int ANGLE_STEP = 1;
+const int SWEEP_DELAY = 18;
 
 // --- Ultrasonic Constant ---
 const float SOUND_SPEED_FACTOR = 58.2;
 
-// --- Servo Object ---
 Servo radarServo;
 
-// --- Sweep Variables ---
 int angle = 0;
 int direction = 1;
 
@@ -51,26 +48,22 @@ void setup() {
   pinMode(LED2, OUTPUT);
   pinMode(LED3, OUTPUT);
   pinMode(LED4, OUTPUT);
+
+  randomSeed(analogRead(0)); // makes random flashing better
 }
 
 void loop() {
 
-  // Move Servo
   radarServo.write(angle);
 
-  // Measure distance
   int distance = calculateDistance();
 
-  // LED control
   controlLEDs(distance);
 
-  // Buzzer control
   controlBuzzer(distance);
 
-  // Send radar data
   printData(angle, distance);
 
-  // Sweep movement
   angle += direction * ANGLE_STEP;
 
   if (angle >= MAX_ANGLE || angle <= MIN_ANGLE) {
@@ -104,11 +97,24 @@ int calculateDistance() {
 // --- LED Control ---
 void controlLEDs(int distance) {
 
-  digitalWrite(LED1, distance < 80);
-  digitalWrite(LED2, distance < 60);
-  digitalWrite(LED3, distance < 40);
-  digitalWrite(LED4, distance < 20);
+  // CRAZY MODE when object very close
+  if (distance < 20) {
 
+    digitalWrite(LED1, random(0,2));
+    digitalWrite(LED2, random(0,2));
+    digitalWrite(LED3, random(0,2));
+    digitalWrite(LED4, random(0,2));
+
+    delay(40); // fast flashing
+  }
+
+  else {
+
+    digitalWrite(LED1, distance < 80);
+    digitalWrite(LED2, distance < 60);
+    digitalWrite(LED3, distance < 40);
+    digitalWrite(LED4, distance < 20);
+  }
 }
 
 // --- Buzzer Control ---
@@ -123,7 +129,6 @@ void controlBuzzer(int distance) {
   else {
     noTone(BUZZER_PIN);
   }
-
 }
 
 // --- Send Data to Processing ---
