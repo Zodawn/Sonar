@@ -8,12 +8,13 @@ https://projecthub.arduino.cc/diegogalvan_1294/building-an-ultrasonic-radar-usin
 */
 
 #include <Servo.h>
+#include <Servo.h>
 
 // --- Pin Definitions ---
 const int SERVO_PIN = 11;
 const int TRIG_PIN = 8;
 const int ECHO_PIN = 9;
-const int BUZZER_PIN = 6;   // Piezo speaker
+const int BUZZER_PIN = 6;
 
 // --- LED Pins ---
 const int LED1 = 2;
@@ -21,56 +22,67 @@ const int LED2 = 3;
 const int LED3 = 4;
 const int LED4 = 5;
 
-// --- Servo Constants ---
+// --- Servo Radar Settings ---
 const int MIN_ANGLE = 0;
 const int MAX_ANGLE = 180;
-const int ANGLE_STEP = 1;
-const int SWEEP_DELAY = 20;
+const int ANGLE_STEP = 2;
+const int SWEEP_DELAY = 8;
 
 // --- Ultrasonic Constant ---
 const float SOUND_SPEED_FACTOR = 58.2;
 
-Servo myServo;
+// --- Servo Object ---
+Servo radarServo;
+
+// --- Sweep Variables ---
+int angle = 0;
+int direction = 1;
 
 void setup() {
 
+  Serial.begin(9600);
+
+  radarServo.attach(SERVO_PIN);
+
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
+
+  pinMode(BUZZER_PIN, OUTPUT);
 
   pinMode(LED1, OUTPUT);
   pinMode(LED2, OUTPUT);
   pinMode(LED3, OUTPUT);
   pinMode(LED4, OUTPUT);
-
-  pinMode(BUZZER_PIN, OUTPUT);
-
-  myServo.attach(SERVO_PIN);
-
-  Serial.begin(9600);
 }
 
 void loop() {
-  sweepAndMeasure(MIN_ANGLE, MAX_ANGLE, ANGLE_STEP);
-  sweepAndMeasure(MAX_ANGLE, MIN_ANGLE, -ANGLE_STEP);
-}
 
-void sweepAndMeasure(int startAngle, int endAngle, int step) {
+  // Move Servo
+  radarServo.write(angle);
 
-  for (int angle = startAngle;
-       (step > 0) ? (angle <= endAngle) : (angle >= endAngle);
-       angle += step) {
+  // Get Distance
+  int distance = calculateDistance();
 
-    myServo.write(angle);
-    delay(SWEEP_DELAY);
+  // Control LEDs
+  controlLEDs(distance);
 
-    int distance = calculateDistance();
+  // Control Buzzer
+  controlBuzzer(distance);
 
-    updateLEDs(distance);
-    updateBuzzer(distance);
-    printData(angle, distance);
+  // Send Data to Radar Display
+  printData(angle, distance);
+
+  // Sweep Servo
+  angle += direction * ANGLE_STEP;
+
+  if (angle >= MAX_ANGLE || angle <= MIN_ANGLE) {
+    direction = -direction;
   }
+
+  delay(SWEEP_DELAY);
 }
 
+// --- Distance Function ---
 int calculateDistance() {
 
   digitalWrite(TRIG_PIN, LOW);
@@ -80,9 +92,8 @@ int calculateDistance() {
   delayMicroseconds(10);
   digitalWrite(TRIG_PIN, LOW);
 
-  long duration = pulseIn(ECHO_PIN, HIGH, 30000); // timeout after 30ms
+  long duration = pulseIn(ECHO_PIN, HIGH, 30000);
 
-  // If no echo received, treat as nothing detected
   if (duration == 0) {
     return 200;
   }
@@ -92,61 +103,32 @@ int calculateDistance() {
   return distance;
 }
 
-void updateLEDs(int distance) {
+// --- LED Control ---
+void controlLEDs(int distance) {
 
-  digitalWrite(LED1, LOW);
-  digitalWrite(LED2, LOW);
-  digitalWrite(LED3, LOW);
-  digitalWrite(LED4, LOW);
+  digitalWrite(LED1, distance < 80);
+  digitalWrite(LED2, distance < 60);
+  digitalWrite(LED3, distance < 40);
+  digitalWrite(LED4, distance < 20);
 
-  if (distance > 100) {
-    // Nothing detected
-  }
-  else if (distance > 75) {
-    digitalWrite(LED1, HIGH);
-  }
-  else if (distance > 50) {
-    digitalWrite(LED1, HIGH);
-    digitalWrite(LED2, HIGH);
-  }
-  else if (distance > 25) {
-    digitalWrite(LED1, HIGH);
-    digitalWrite(LED2, HIGH);
-    digitalWrite(LED3, HIGH);
-  }
-  else {
-    digitalWrite(LED1, HIGH);
-    digitalWrite(LED2, HIGH);
-    digitalWrite(LED3, HIGH);
-    digitalWrite(LED4, HIGH);
-  }
 }
 
-void updateBuzzer(int distance) {
+// --- Buzzer Control ---
+void controlBuzzer(int distance) {
 
-  if (distance > 100) {
-    noTone(BUZZER_PIN);
+  if (distance < 15) {
+    tone(BUZZER_PIN, 1200);
   }
-  else if (distance > 75) {
-    tone(BUZZER_PIN, 500);
-    delay(400);
-    noTone(BUZZER_PIN);
-  }
-  else if (distance > 50) {
-    tone(BUZZER_PIN, 700);
-    delay(300);
-    noTone(BUZZER_PIN);
-  }
-  else if (distance > 25) {
+  else if (distance < 30) {
     tone(BUZZER_PIN, 900);
-    delay(200);
-    noTone(BUZZER_PIN);
   }
   else {
-    tone(BUZZER_PIN, 1200); // constant tone when very close
+    noTone(BUZZER_PIN);
   }
+
 }
 
+// --- Send Data to Processing Radar ---
 void printData(int angle, int distance) {
 
   Serial.print(angle);
