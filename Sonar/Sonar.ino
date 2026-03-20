@@ -14,10 +14,10 @@ const int ECHO_PIN = 9;
 const int BUZZER_PIN = 6;
 
 // --- LED Pins ---
-const int LED1 = 2;
-const int LED2 = 3;
-const int LED3 = 4;
-const int LED4 = 5;
+const int LED1 = 2; // first
+const int LED2 = 3; // last
+const int LED3 = 4; // third
+const int LED4 = 5; // second
 
 // --- Servo Radar Settings ---
 const int MIN_ANGLE = 0;
@@ -49,7 +49,7 @@ void setup() {
   pinMode(LED3, OUTPUT);
   pinMode(LED4, OUTPUT);
 
-  randomSeed(analogRead(0)); // makes random flashing better
+  randomSeed(analogRead(0));
 }
 
 void loop() {
@@ -94,26 +94,39 @@ int calculateDistance() {
   return distance;
 }
 
-// --- LED Control ---
+// --- LED Control (UPDATED ORDER) ---
 void controlLEDs(int distance) {
 
-  // CRAZY MODE when object very close
+  // CRAZY MODE when very close
   if (distance < 20) {
 
     digitalWrite(LED1, random(0,2));
-    digitalWrite(LED2, random(0,2));
-    digitalWrite(LED3, random(0,2));
     digitalWrite(LED4, random(0,2));
+    digitalWrite(LED3, random(0,2));
+    digitalWrite(LED2, random(0,2));
 
-    delay(40); // fast flashing
+    delay(40);
+    return;
   }
 
-  else {
+  // Turn all OFF first
+  digitalWrite(LED1, LOW); // pin 2
+  digitalWrite(LED2, LOW); // pin 3
+  digitalWrite(LED3, LOW); // pin 4
+  digitalWrite(LED4, LOW); // pin 5
 
-    digitalWrite(LED1, distance < 80);
-    digitalWrite(LED2, distance < 60);
-    digitalWrite(LED3, distance < 40);
-    digitalWrite(LED4, distance < 20);
+  // Sequential order: 2 → 5 → 4 → 3
+  if (distance < 80) {
+    digitalWrite(LED1, HIGH);
+  }
+  if (distance < 60) {
+    digitalWrite(LED4, HIGH);
+  }
+  if (distance < 40) {
+    digitalWrite(LED3, HIGH);
+  }
+  if (distance < 20) {
+    digitalWrite(LED2, HIGH);
   }
 }
 
